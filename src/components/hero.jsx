@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Globe, ChevronDown, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Heroback from '../assets/heroback.jpeg';
+import { useNavigate } from "react-router-dom";
 
 const LANGUAGES = [
   { code: 'EN', label: 'English' },
@@ -12,10 +13,12 @@ const LANGUAGES = [
   { code: 'JP', label: '日本語' },
 ];
 
+
 export default function App() {
   const langRef = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
   const [langOpen, setLangOpen] = useState(false);
   const [activeLang, setActiveLang] = useState(LANGUAGES[0]);
   const [hoveredLink, setHoveredLink] = useState(null);
@@ -37,291 +40,63 @@ export default function App() {
 
   const navLinks = ['Explore Services', 'For Providers', 'About Us', 'Contact'];
 
-  const navStyle = {
-    position: 'fixed',
-    top: 0, left: 0, right: 0,
-    zIndex: 50,
-    transition: 'all 0.5s ease',
-    background: scrolled ? 'rgba(10,10,10,0.85)' : 'transparent',
-    backdropFilter: scrolled ? 'blur(20px)' : 'none',
-    WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
-    borderBottom: scrolled
-      ? '1px solid rgba(255,255,255,0.05)'
-      : '1px solid transparent',
-    padding: scrolled ? '12px 0' : '20px 0',
-  };
-
   return (
     <>
+      {/* Minimal style block — only for custom keyframes Tailwind can't express */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { height: 100%; }
-        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-
-        .nav-inner {
-          max-width: 1280px;
-          margin: 0 auto;
-          padding: 0 48px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
+        @keyframes dot-pulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50%       { transform: scale(1.3); opacity: 0.7; }
         }
-
-        .desktop-links { display: flex; align-items: center; gap: 2px; }
-        .desktop-right  { display: flex; align-items: center; gap: 4px; }
-        .mobile-toggle  { display: none; }
-
-        @media (max-width: 900px) {
-          .desktop-links, .desktop-right { display: none; }
-          .mobile-toggle { display: flex; }
-          .nav-inner { padding: 0 24px; }
+        @keyframes scroll-bounce {
+          0%, 100% { transform: translateX(-50%) translateY(0); }
+          50%       { transform: translateX(-50%) translateY(7px); }
         }
-
-        /* ── HERO ── */
-        .hero {
-          width: 100%; min-height: 100vh;
-          position: relative; display: flex; align-items: center;
-          padding: 100px 0 72px;
-         background-image: url(${Heroback});
-          background-size: cover; background-position: center 35%;
-          overflow: hidden;
-        }
-        .hero::before {
-          content: ''; position: absolute; inset: 0; z-index: 1;
-          background: linear-gradient(105deg, rgba(5,4,3,0.96) 0%, rgba(5,4,3,0.75) 45%, rgba(5,4,3,0.2) 100%);
-        }
-        .hero::after {
-          content: ''; position: absolute; inset: 0; z-index: 1;
-          background: radial-gradient(ellipse 70% 60% at 15% 60%, rgba(249,115,22,0.07) 0%, transparent 70%);
-          pointer-events: none;
-        }
-        .hero-inner {
-          position: relative; z-index: 2;
-          width: 100%; max-width: 1280px;
-          margin: 0 auto; padding: 0 72px;
-        }
-        .hero-content {
-          max-width: 620px;
-          display: flex; flex-direction: column; gap: 0;
-        }
-
-        /* ── eyebrow pill ── */
-        .hero-eyebrow {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: rgba(249,115,22,0.1);
-          border: 1px solid rgba(249,115,22,0.25);
-          border-radius: 40px; padding: 5px 14px 5px 8px;
-          margin-bottom: 22px; width: fit-content;
-        }
-        .hero-eyebrow-dot {
-          width: 20px; height: 20px; border-radius: 50%;
-          background: rgba(249,115,22,0.18);
-          display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-        }
-        .hero-eyebrow-dot::after {
-          content: ''; width: 7px; height: 7px; border-radius: 50%;
-          background: #facc15;
-          animation: pulse 2s ease-in-out infinite;
-        }
-        @keyframes pulse {
-          0%,100% { transform: scale(1); opacity: 1; }
-          50%      { transform: scale(1.3); opacity: 0.7; }
-        }
-        .hero-eyebrow span {
-          font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
-          text-transform: uppercase; color: #facc15;
-        }
-
-        /* ── title ── */
-        .hero-title {
-          font-size: 64px; font-weight: 700;
-          line-height: 1.03; letter-spacing: -2.5px;
-          color: #fff; margin-bottom: 18px;
-        }
-        .line-muted  { display: block; color: rgba(255,255,255,0.32); font-weight: 600; }
-        .line-main   { display: block; }
-        .line-accent { display: block; }
-        .dot-accent  { color: #facc15; }
-
-        /* ── subtitle ── */
-        .hero-sub {
-          font-size: 15px; font-weight: 400;
-          color: rgba(255,255,255,0.44); line-height: 1.78;
-          margin-bottom: 32px; max-width: 430px;
-        }
-
-        /* ── search bar ── */
-        .hero-search {
-          display: flex; align-items: center;
-          background: rgba(255,255,255,0.06);
-          border: 1px solid rgba(255,255,255,0.12);
-          border-radius: 14px; padding: 6px 6px 6px 18px;
-          margin-bottom: 28px; max-width: 480px;
-          transition: border-color 0.2s, background 0.2s;
-        }
-        .hero-search:focus-within {
-          border-color: rgba(255,255,255,0.28);
-          background: rgba(255,255,255,0.09);
-        }
-        .hero-search input {
-          flex: 1; background: transparent; border: none; outline: none;
-          color: #fff; font-size: 14px; font-weight: 400;
-          font-family: inherit;
-        }
-        .hero-search input::placeholder { color: rgba(255,255,255,0.3); }
-        .hero-search-btn {
-          background: #facc15; border: none; border-radius: 10px;
-          padding: 10px 20px; cursor: pointer; flex-shrink: 0;
-          font-size: 13px; font-weight: 600; color: #fff;
-          display: flex; align-items: center; gap: 6px;
-          transition: background 0.2s, transform 0.15s;
-          font-family: inherit;
-        }
-        .hero-search-btn:hover { background: #ea6c0a; transform: translateY(-1px); }
-
-        /* ── popular tags ── */
-        .hero-tags {
-          display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
-          margin-bottom: 36px;
-        }
-        .hero-tags-label {
-          font-size: 11px; font-weight: 500;
-          color: rgba(255,255,255,0.28); letter-spacing: 0.3px;
-          margin-right: 2px;
-        }
-        .hero-tag {
-          font-size: 12px; font-weight: 500;
-          color: rgba(255,255,255,0.5);
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 20px; padding: 4px 12px; cursor: pointer;
-          transition: color 0.18s, border-color 0.18s, background 0.18s;
-        }
-        .hero-tag:hover { color: #fff; border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.09); }
-
-        /* ── trust row ── */
-        .hero-trust {
-          display: flex; align-items: center; gap: 20px;
-          padding-top: 28px;
-          border-top: 1px solid rgba(255,255,255,0.07);
-        }
-        .trust-avatars { display: flex; }
-        .trust-avatar {
-          width: 30px; height: 30px; border-radius: 50%;
-          border: 2px solid rgba(10,10,10,0.8);
-          background: rgba(255,255,255,0.12);
-          margin-left: -8px; overflow: hidden;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.6);
-        }
-        .trust-avatar:first-child { margin-left: 0; }
-        .trust-text { display: flex; flex-direction: column; gap: 1px; }
-        .trust-text strong { font-size: 13px; font-weight: 600; color: #fff; }
-        .trust-text span { font-size: 11px; color: rgba(255,255,255,0.35); }
-        .trust-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.08); }
-        .trust-stat { display: flex; flex-direction: column; gap: 1px; }
-        .trust-stat strong { font-size: 13px; font-weight: 600; color: #fff; }
-        .trust-stat span { font-size: 11px; color: rgba(255,255,255,0.35); }
-
-        /* ── scroll hint ── */
-        .scroll-hint {
-          position: absolute; bottom: 28px; left: 50%;
-          transform: translateX(-50%);
-          display: flex; flex-direction: column; align-items: center; gap: 5px;
-          opacity: 0.18; z-index: 2; pointer-events: none;
-          animation: scrollBounce 2.4s ease-in-out infinite;
-        }
-        .scroll-hint span { font-size: 8px; color: #fff; letter-spacing: 2.5px; text-transform: uppercase; }
-        .scroll-arrow { width: 1px; height: 24px; background: linear-gradient(to bottom, rgba(255,255,255,0.9), transparent); }
-        @keyframes scrollBounce {
-          0%,100% { transform: translateX(-50%) translateY(0); }
-          50%      { transform: translateX(-50%) translateY(7px); }
-        }
-
-        /* ── RESPONSIVE ── */
-        @media (max-width: 1279px) and (min-width: 901px) {
-          .hero-inner { padding: 0 52px; }
-          .hero-title { font-size: 54px; letter-spacing: -2px; }
-        }
-        @media (max-width: 900px) {
-          .hero { padding: 96px 0 64px; }
-          .hero-inner { padding: 0 36px; }
-          .hero-title { font-size: 46px; letter-spacing: -1.6px; }
-          .hero-content { max-width: 100%; }
-          .hero-sub { max-width: 100%; }
-          .hero-search { max-width: 100%; }
-        }
-        @media (max-width: 600px) {
-          .hero { padding: 88px 0 56px; }
-          .hero-inner { padding: 0 22px; }
-          .hero-title { font-size: 36px; letter-spacing: -1.1px; line-height: 1.07; margin-bottom: 14px; }
-          .hero-sub { font-size: 14px; margin-bottom: 24px; }
-          .hero-eyebrow { margin-bottom: 18px; }
-          .hero-search { border-radius: 12px; margin-bottom: 20px; padding: 5px 5px 5px 14px; }
-          .hero-search input { font-size: 13px; }
-          .hero-search-btn { padding: 9px 14px; font-size: 12px; }
-          .hero-tags { margin-bottom: 28px; gap: 6px; }
-          .hero-trust { gap: 14px; padding-top: 22px; flex-wrap: wrap; }
-          .trust-divider { display: none; }
-        }
-        @media (max-width: 380px) {
-          .hero-inner { padding: 0 18px; }
-          .hero-title { font-size: 30px; letter-spacing: -0.8px; }
-          .hero-sub { font-size: 13px; }
-        }
+        .dot-pulse  { animation: dot-pulse 2s ease-in-out infinite; }
+        .scroll-bounce { animation: scroll-bounce 2.4s ease-in-out infinite; }
       `}</style>
 
-      {/* NAV */}
+      {/* ── NAV ── */}
       <motion.nav
-        style={navStyle}
+        className={[
+          'fixed top-0 left-0 right-0 z-50 transition-all duration-500',
+          scrolled
+            ? 'bg-black/85 backdrop-blur-xl border-b border-white/5 py-3'
+            : 'bg-transparent border-b border-transparent py-5',
+        ].join(' ')}
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       >
-        <div className="nav-inner">
+        <div className="max-w-screen-xl mx-auto px-12 max-[900px]:px-6 flex items-center justify-between">
 
           {/* Logo */}
           <motion.div
-            style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', flexShrink: 0 }}
+            className="flex items-center gap-2.5 cursor-pointer shrink-0"
             whileHover={{ scale: 1.03 }}
             transition={{ type: 'spring', stiffness: 400, damping: 20 }}
           >
-            <div style={{ width: 26, height: 26, background: '#fff', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ width: 12, height: 12, background: '#0a0a0a', borderRadius: 3 }} />
+            <div className="w-6 h-6 bg-white rounded-[5px] flex items-center justify-center">
+              <div className="w-3 h-3 bg-zinc-950 rounded-[3px]" />
             </div>
-            <span style={{ color: '#fff', fontWeight: 700, fontSize: 15, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+            <span className="text-white font-bold text-[15px] tracking-[0.12em] uppercase">
               Slotify
             </span>
           </motion.div>
 
           {/* Desktop Links */}
-          <div className="desktop-links">
+          <div className="hidden min-[901px]:flex items-center gap-0.5">
             {navLinks.map((link) => (
               <a
                 key={link}
                 href="#"
                 onMouseEnter={() => setHoveredLink(link)}
                 onMouseLeave={() => setHoveredLink(null)}
-                style={{
-                  position: 'relative',
-                  padding: '8px 14px',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: hoveredLink === link ? '#fff' : 'rgba(161,161,170,1)',
-                  textDecoration: 'none',
-                  borderRadius: 8,
-                  transition: 'color 0.2s',
-                  display: 'inline-block',
-                }}
+                className="relative inline-block px-3.5 py-2 text-[13px] font-medium no-underline rounded-lg transition-colors duration-200"
+                style={{ color: hoveredLink === link ? '#fff' : 'rgba(161,161,170,1)' }}
               >
                 <motion.span
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    borderRadius: 8,
-                    background: 'rgba(255,255,255,0.05)',
-                  }}
+                  className="absolute inset-0 rounded-lg bg-white/5"
                   initial={{ opacity: 0, scale: 0.92 }}
                   animate={{
                     opacity: hoveredLink === link ? 1 : 0,
@@ -329,43 +104,26 @@ export default function App() {
                   }}
                   transition={{ duration: 0.18 }}
                 />
-                <span style={{ position: 'relative', zIndex: 1 }}>{link}</span>
+                <span className="relative z-[1]">{link}</span>
               </a>
             ))}
           </div>
 
           {/* Desktop Right */}
-          <div className="desktop-right">
+          <div className="hidden min-[901px]:flex items-center gap-1">
 
             {/* Language dropdown */}
-            <div style={{ position: 'relative' }} ref={langRef}>
+            <div className="relative" ref={langRef}>
               <button
                 onClick={() => setLangOpen((p) => !p)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  padding: '7px 12px', borderRadius: 8,
-                  background: 'transparent', border: 'none', cursor: 'pointer',
-                  color: 'rgba(161,161,170,1)', fontSize: 13, fontWeight: 500,
-                  transition: 'color 0.2s, background 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#fff';
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'rgba(161,161,170,1)';
-                  e.currentTarget.style.background = 'transparent';
-                }}
+                className="flex items-center gap-1.5 px-3 py-[7px] rounded-lg bg-transparent border-0 cursor-pointer text-zinc-400 text-[13px] font-medium transition-colors duration-200 hover:text-white hover:bg-white/5"
               >
-                <Globe size={14} style={{ opacity: 0.7 }} />
+                <Globe size={14} className="opacity-70" />
                 <span>{activeLang.code}</span>
                 <ChevronDown
                   size={12}
-                  style={{
-                    opacity: 0.6,
-                    transition: 'transform 0.2s',
-                    transform: langOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                  }}
+                  className="opacity-60 transition-transform duration-200"
+                  style={{ transform: langOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
                 />
               </button>
 
@@ -376,43 +134,22 @@ export default function App() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 4, scale: 0.96 }}
                     transition={{ duration: 0.16, ease: 'easeOut' }}
-                    style={{
-                      position: 'absolute', right: 0, top: 'calc(100% + 8px)',
-                      width: 160, padding: '6px 0', borderRadius: 12,
-                      background: 'rgba(12,12,12,0.97)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      backdropFilter: 'blur(20px)',
-                      boxShadow: '0 16px 40px rgba(0,0,0,0.7)',
-                      zIndex: 100,
-                    }}
+                    className="absolute right-0 top-[calc(100%+8px)] w-40 py-1.5 rounded-xl bg-[#0c0c0c]/[0.97] border border-white/[0.08] backdrop-blur-xl shadow-[0_16px_40px_rgba(0,0,0,0.7)] z-[100]"
                   >
                     {LANGUAGES.map((lang) => (
                       <button
                         key={lang.code}
                         onClick={() => { setActiveLang(lang); setLangOpen(false); }}
-                        style={{
-                          width: '100%', display: 'flex', alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '10px 16px', border: 'none', cursor: 'pointer',
-                          background: activeLang.code === lang.code ? 'rgba(255,255,255,0.06)' : 'transparent',
-                          color: activeLang.code === lang.code ? '#fff' : 'rgba(161,161,170,1)',
-                          fontSize: 13, fontWeight: 400,
-                          transition: 'color 0.15s, background 0.15s',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                          e.currentTarget.style.color = '#fff';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background =
-                            activeLang.code === lang.code ? 'rgba(255,255,255,0.06)' : 'transparent';
-                          e.currentTarget.style.color =
-                            activeLang.code === lang.code ? '#fff' : 'rgba(161,161,170,1)';
-                        }}
+                        className={[
+                          'w-full flex items-center justify-between px-4 py-2.5 border-0 cursor-pointer text-[13px] font-normal transition-colors duration-150',
+                          activeLang.code === lang.code
+                            ? 'bg-white/[0.06] text-white'
+                            : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-white',
+                        ].join(' ')}
                       >
                         <span>{lang.label}</span>
                         {activeLang.code === lang.code && (
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#facc15', flexShrink: 0 }} />
+                          <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
                         )}
                       </button>
                     ))}
@@ -422,56 +159,33 @@ export default function App() {
             </div>
 
             {/* Divider */}
-            <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.1)', margin: '0 6px' }} />
+            <div className="w-px h-4 bg-white/10 mx-1.5" />
 
             {/* Log In */}
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              style={{
-                padding: '8px 16px', border: 'none', borderRadius: 8,
-                background: 'transparent', cursor: 'pointer',
-                color: 'rgba(161,161,170,1)', fontSize: 13, fontWeight: 500,
-                transition: 'color 0.2s, background 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#fff';
-                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'rgba(161,161,170,1)';
-                e.currentTarget.style.background = 'transparent';
-              }}
-            >
-              Log In
-            </motion.button>
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => navigate("/login")}
+                className="px-4 py-2 border-0 rounded-lg bg-transparent cursor-pointer text-zinc-400 text-[13px] font-medium transition-colors duration-200 hover:text-white hover:bg-white/5"
+                >
+                Log In
+                </motion.button>
 
             {/* Get Started */}
             <motion.button
-              whileHover={{ scale: 1.04, boxShadow: '0 0 24px rgba(255,255,255,0.12)' }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ type: 'spring', stiffness: 380, damping: 18 }}
-              style={{
-                marginLeft: 4, padding: '9px 22px',
-                background: '#fff', color: '#000',
-                border: 'none', borderRadius: 40,
-                fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#f4f4f5'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
-            >
-              Get Started
-            </motion.button>
+                whileHover={{ scale: 1.04, boxShadow: '0 0 24px rgba(255,255,255,0.12)' }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 18 }}
+                onClick={() => navigate("/login")}
+                className="ml-1 px-5 py-2 bg-white text-black border-0 rounded-full text-[13px] font-semibold cursor-pointer hover:bg-zinc-100 transition-colors duration-200"
+                >
+                Get Started
+                </motion.button>
           </div>
 
           {/* Mobile Toggle */}
           <button
-            className="mobile-toggle"
-            style={{
-              background: 'transparent', border: 'none',
-              color: '#fff', cursor: 'pointer',
-              padding: 8, borderRadius: 8,
-            }}
+            className="flex min-[901px]:hidden bg-transparent border-0 text-white cursor-pointer p-2 rounded-lg"
             onClick={() => setMenuOpen((o) => !o)}
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -486,39 +200,20 @@ export default function App() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              style={{
-                overflow: 'hidden',
-                background: 'rgba(8,8,8,0.97)',
-                backdropFilter: 'blur(24px)',
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
-              }}
+              className="overflow-hidden bg-[#080808]/[0.97] backdrop-blur-2xl border-b border-white/[0.06]"
             >
-              <div style={{ padding: '12px 24px 24px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div className="px-6 pt-3 pb-6 flex flex-col gap-0.5">
                 {navLinks.map((link) => (
                   <a
                     key={link}
                     href="#"
                     onMouseEnter={() => setHoveredLink(link)}
                     onMouseLeave={() => setHoveredLink(null)}
-                    style={{
-                      position: 'relative',
-                      padding: '8px 14px',
-                      fontSize: 13,
-                      fontWeight: 500,
-                      color: hoveredLink === link ? '#fff' : 'rgba(161,161,170,1)',
-                      textDecoration: 'none',
-                      borderRadius: 8,
-                      transition: 'color 0.2s',
-                      display: 'inline-block',
-                    }}
+                    className="relative inline-block px-3.5 py-2 text-[13px] font-medium no-underline rounded-lg transition-colors duration-200"
+                    style={{ color: hoveredLink === link ? '#fff' : 'rgba(161,161,170,1)' }}
                   >
                     <motion.span
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        borderRadius: 8,
-                        background: 'rgba(255,255,255,0.05)',
-                      }}
+                      className="absolute inset-0 rounded-lg bg-white/5"
                       initial={{ opacity: 0, scale: 0.92 }}
                       animate={{
                         opacity: hoveredLink === link ? 1 : 0,
@@ -526,51 +221,34 @@ export default function App() {
                       }}
                       transition={{ duration: 0.18 }}
                     />
-                    <span style={{ position: 'relative', zIndex: 1 }}>{link}</span>
+                    <span className="relative z-[1]">{link}</span>
                   </a>
                 ))}
 
-                <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '8px 0' }} />
+                <div className="h-px bg-white/[0.06] my-2" />
 
                 {/* Mobile lang chips */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '0 12px 8px' }}>
+                <div className="flex flex-wrap gap-2 px-3 pb-2">
                   {LANGUAGES.map((lang) => (
                     <button
                       key={lang.code}
                       onClick={() => setActiveLang(lang)}
-                      style={{
-                        fontSize: 12, fontWeight: 500,
-                        padding: '6px 10px', borderRadius: 8,
-                        border: 'none', cursor: 'pointer',
-                        background: activeLang.code === lang.code
-                          ? 'rgba(255,255,255,0.1)' : 'transparent',
-                        color: activeLang.code === lang.code
-                          ? '#fff' : 'rgba(113,113,122,1)',
-                        transition: 'all 0.15s',
-                      }}
+                      className={[
+                        'text-xs font-medium px-2.5 py-1.5 rounded-lg border-0 cursor-pointer transition-all duration-150',
+                        activeLang.code === lang.code
+                          ? 'bg-white/10 text-white'
+                          : 'bg-transparent text-zinc-500',
+                      ].join(' ')}
                     >
                       {lang.code}
                     </button>
                   ))}
                 </div>
 
-                <button
-                  style={{
-                    textAlign: 'left', padding: '13px 12px', borderRadius: 8,
-                    border: 'none', background: 'transparent',
-                    color: '#fff', fontSize: 15, fontWeight: 500, cursor: 'pointer',
-                  }}
-                >
+                <button className="text-left px-3 py-3.5 rounded-lg border-0 bg-transparent text-white text-[15px] font-medium cursor-pointer">
                   Log In
                 </button>
-                <button
-                  style={{
-                    padding: '13px', borderRadius: 40,
-                    border: 'none', background: '#fff',
-                    color: '#000', fontSize: 15, fontWeight: 600,
-                    cursor: 'pointer', marginTop: 4,
-                  }}
-                >
+                <button className="px-3 py-3.5 rounded-full border-0 bg-white text-black text-[15px] font-semibold cursor-pointer mt-1">
                   Get Started
                 </button>
               </div>
@@ -579,28 +257,40 @@ export default function App() {
         </AnimatePresence>
       </motion.nav>
 
-      {/* HERO */}
-      <section className="hero">
-        <div className="hero-inner">
-          <div className="hero-content">
+      {/* ── HERO ── */}
+      <section
+        className="w-full min-h-screen relative flex items-center py-24 max-[900px]:py-20 max-[600px]:py-[88px_0_56px] bg-cover bg-center overflow-hidden"
+        style={{ backgroundImage: `url(${Heroback})`, backgroundPosition: 'center 35%' }}
+      >
+        {/* Overlay 1 — dark directional gradient */}
+        <div
+          className="absolute inset-0 z-[1]"
+          style={{ background: 'linear-gradient(105deg, rgba(5,4,3,0.96) 0%, rgba(5,4,3,0.75) 45%, rgba(5,4,3,0.2) 100%)' }}
+        />
+        {/* Overlay 2 — orange radial glow */}
+        <div
+          className="absolute inset-0 z-[1] pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse 70% 60% at 15% 60%, rgba(249,115,22,0.07) 0%, transparent 70%)' }}
+        />
 
-           
+        <div className="relative z-[2] w-full max-w-screen-xl mx-auto px-[72px] max-[1279px]:px-[52px] max-[900px]:px-9 max-[600px]:px-6 max-[380px]:px-[18px]">
+          <div className="max-w-[620px] max-[900px]:max-w-full flex flex-col gap-0">
 
             {/* Title */}
             <motion.h1
-              className="hero-title"
+              className="text-[64px] max-[1279px]:text-[54px] max-[900px]:text-[46px] max-[600px]:text-[36px] max-[380px]:text-[30px] font-bold leading-[1.03] tracking-[-2.5px] max-[900px]:tracking-[-1.6px] max-[600px]:tracking-[-1.1px] max-[380px]:tracking-[-0.8px] text-white mb-[18px] max-[600px]:mb-3.5"
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="line-muted">Your Ultimate</span>
-              <span className="line-main">Service<span className="dot-accent">.</span></span>
-              <span className="line-accent">Starts Here</span>
+              <span className="block text-white/30 font-semibold">Your Ultimate</span>
+              <span className="block">Service<span className="text-yellow-400">.</span></span>
+              <span className="block">Starts Here</span>
             </motion.h1>
 
             {/* Subtitle */}
             <motion.p
-              className="hero-sub"
+              className="text-[15px] max-[600px]:text-[14px] max-[380px]:text-[13px] font-normal text-white/[0.44] leading-[1.78] mb-8 max-[600px]:mb-6 max-w-[430px] max-[900px]:max-w-full"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.32, ease: [0.16, 1, 0.3, 1] }}
@@ -610,64 +300,94 @@ export default function App() {
 
             {/* Search bar */}
             <motion.div
-              className="hero-search"
+              className="flex items-center bg-white/[0.06] border border-white/[0.12] rounded-[14px] max-[600px]:rounded-xl p-1.5 max-[600px]:p-[5px] pl-[18px] max-[600px]:pl-3.5 mb-7 max-[600px]:mb-5 max-w-[480px] max-[900px]:max-w-full focus-within:border-white/[0.28] focus-within:bg-white/[0.09] transition-all duration-200"
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.42, ease: [0.16, 1, 0.3, 1] }}
             >
-              <input type="text" placeholder="Search for a service — e.g. plumber, designer…" />
-              <button className="hero-search-btn">
+              <input
+                type="text"
+                placeholder="Search for a service — e.g. plumber, designer…"
+                className="flex-1 bg-transparent border-0 outline-none text-white text-[14px] max-[600px]:text-[13px] font-normal placeholder:text-white/30 font-inherit"
+                style={{ fontFamily: 'inherit' }}
+              />
+              <button
+                className="bg-yellow-400 border-0 rounded-[10px] px-5 max-[600px]:px-3.5 py-2.5 max-[600px]:py-[9px] cursor-pointer shrink-0 text-[13px] max-[600px]:text-[12px] font-semibold text-black flex items-center gap-1.5 hover:bg-orange-500 hover:-translate-y-px transition-all duration-200"
+                style={{ fontFamily: 'inherit' }}
+              >
                 Search <ArrowRight size={13} />
               </button>
             </motion.div>
 
             {/* Popular tags */}
             <motion.div
-              className="hero-tags"
+              className="flex items-center flex-wrap gap-2 max-[600px]:gap-1.5 mb-9 max-[600px]:mb-7"
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.52, ease: [0.16, 1, 0.3, 1] }}
             >
-              <span className="hero-tags-label">Popular:</span>
+              <span className="text-[11px] font-medium text-white/[0.28] tracking-[0.3px] mr-0.5">
+                Popular:
+              </span>
               {['Home Cleaning', 'Web Design', 'Photography', 'Personal Training', 'Tutoring'].map((tag) => (
-                <button key={tag} className="hero-tag">{tag}</button>
+                <button
+                  key={tag}
+                  className="text-xs font-medium text-white/50 bg-white/5 border border-white/10 rounded-full px-3 py-1 cursor-pointer hover:text-white hover:border-white/25 hover:bg-white/[0.09] transition-all duration-[180ms]"
+                >
+                  {tag}
+                </button>
               ))}
             </motion.div>
 
             {/* Trust row */}
             <motion.div
-              className="hero-trust"
+              className="flex items-center gap-5 max-[600px]:gap-3.5 pt-7 max-[600px]:pt-[22px] border-t border-white/[0.07] flex-wrap"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.62, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div className="trust-avatars">
-                {['AK', 'MR', 'JS', 'PL'].map((initials) => (
-                  <div key={initials} className="trust-avatar">{initials}</div>
+              {/* Avatars */}
+              <div className="flex">
+                {['AK', 'MR', 'JS', 'PL'].map((initials, i) => (
+                  <div
+                    key={initials}
+                    className={[
+                      'w-[30px] h-[30px] rounded-full border-2 border-zinc-950/80 bg-white/[0.12] flex items-center justify-center text-[10px] font-bold text-white/60 overflow-hidden',
+                      i !== 0 ? '-ml-2' : '',
+                    ].join(' ')}
+                  >
+                    {initials}
+                  </div>
                 ))}
               </div>
-              <div className="trust-text">
-                <strong>1M+ bookings made</strong>
-                <span>by happy customers</span>
+
+              <div className="flex flex-col gap-px">
+                <strong className="text-[13px] font-semibold text-white">1M+ bookings made</strong>
+                <span className="text-[11px] text-white/35">by happy customers</span>
               </div>
-              <div className="trust-divider" />
-              <div className="trust-stat">
-                <strong>4.9 ★ avg rating</strong>
-                <span>across all services</span>
+
+              <div className="w-px h-7 bg-white/[0.08] max-[600px]:hidden" />
+
+              <div className="flex flex-col gap-px">
+                <strong className="text-[13px] font-semibold text-white">4.9 ★ avg rating</strong>
+                <span className="text-[11px] text-white/35">across all services</span>
               </div>
-              <div className="trust-divider" />
-              <div className="trust-stat">
-                <strong>Same-day</strong>
-                <span>availability</span>
+
+              <div className="w-px h-7 bg-white/[0.08] max-[600px]:hidden" />
+
+              <div className="flex flex-col gap-px">
+                <strong className="text-[13px] font-semibold text-white">Same-day</strong>
+                <span className="text-[11px] text-white/35">availability</span>
               </div>
             </motion.div>
 
           </div>
         </div>
 
-        <div className="scroll-hint">
-          <span>Scroll</span>
-          <div className="scroll-arrow" />
+        {/* Scroll hint */}
+        <div className="scroll-bounce absolute bottom-7 left-1/2 flex flex-col items-center gap-1 opacity-[0.18] z-[2] pointer-events-none">
+          <span className="text-[8px] text-white tracking-[2.5px] uppercase">Scroll</span>
+          <div className="w-px h-6 bg-gradient-to-b from-white/90 to-transparent" />
         </div>
       </section>
     </>
