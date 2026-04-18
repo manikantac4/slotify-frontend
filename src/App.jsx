@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import Landing from './pages/Landing';
@@ -38,6 +39,18 @@ function App() {
         )}
       </main>
     </div>
+=======
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Landing from "./components/Landingpage";
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+      </Routes>
+    </Router>
+>>>>>>> be74b9acff48cdc11316beed9838b718fd6ed803
   );
 }
 
