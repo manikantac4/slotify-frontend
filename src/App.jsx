@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { gsap } from "gsap";
 
@@ -314,3 +315,19 @@ export default function About() {
     </div>
   );
 }
+=======
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Landing from "./components/Landingpage";
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
+>>>>>>> be74b9acff48cdc11316beed9838b718fd6ed803
