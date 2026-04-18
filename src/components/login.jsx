@@ -24,11 +24,21 @@ const handleAuth = async () => {
     if (authMode === "signup") {
       const res = await createUserWithEmailAndPassword(auth, email, password);
 
-      await setDoc(doc(db, "users", res.user.uid), {
-        name,
-        email,
-        role
-      });
+      const uid = res.user.uid;
+
+await fetch("http://localhost:5000/api/user/create", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    uid,
+    name,
+    email,
+    role
+  })
+});
+      
 
       alert("Signup successful!");
     } else {

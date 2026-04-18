@@ -3,15 +3,17 @@ import React from "react";
 import About from "../components/about";
 import Features from "../components/features";
 import Footer from "../components/footer";
-import HowItWorks from "../components/HowItWorks";
+import CTA from "../components/CTA";
+import HowItWorksFlow from "../components/HowItWorks";
 export default function Landing() {
   return (
     <div>
       <Hero />
       <About />
       <Features />
-      <HowItWorks />
-      <Footer />
+      <HowItWorksFlow/>
+      <CTA />
+        <Footer />
     </div>
   );
 }
