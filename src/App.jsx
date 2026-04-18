@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { gsap } from "gsap";
 
@@ -359,6 +360,8 @@ function App() {
     </div>
 >>>>>>> e3bc702bba6ae74824d10410ab7ec101d3803c22
 =======
+=======
+>>>>>>> 53b043c0c278ff8f6aa1fb13861f4ebc2b3034c1
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Landing from "./components/Landingpage";
 
@@ -369,7 +372,6 @@ function App() {
         <Route path="/" element={<Landing />} />
       </Routes>
     </Router>
->>>>>>> be74b9acff48cdc11316beed9838b718fd6ed803
   );
 }
 
