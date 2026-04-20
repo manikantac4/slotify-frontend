@@ -16,6 +16,27 @@ const KEYFRAMES = `
   @keyframes sb-heroin   { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
   @keyframes sb-pulsedot { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.5)} 60%{box-shadow:0 0 0 6px rgba(34,197,94,0)} }
   * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+
+  /* ── Mobile-only tweaks ── */
+  @media (max-width: 639px) {
+    .sb-chip-scroll {
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      justify-content: flex-start !important;
+      padding-left: 16px;
+      padding-right: 16px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .sb-chip-scroll::-webkit-scrollbar { display: none; }
+    .sb-chip-scroll button { flex-shrink: 0; }
+
+    .sb-card-img { height: 180px !important; }
+
+    .sb-section-label { padding-left: 16px !important; padding-right: 16px !important; }
+    .sb-grid { padding-left: 16px !important; padding-right: 16px !important; padding-bottom: 88px !important; }
+  }
 `;
 
 if (!document.getElementById("sb-kf")) {
@@ -78,7 +99,6 @@ function Ticker() {
   const doubled = [...TICKER_ITEMS, ...TICKER_ITEMS];
   return (
     <div className="relative overflow-hidden bg-stone-50 border-b border-stone-200 h-10 flex items-center">
-      {/* fade edges */}
       <div className="absolute left-0 top-0 bottom-0 w-16 z-10 pointer-events-none"
         style={{ background: "linear-gradient(to right,#FAFAF9,transparent)" }} />
       <div className="absolute right-0 top-0 bottom-0 w-16 z-10 pointer-events-none"
@@ -113,40 +133,53 @@ function Toast({ message, visible }) {
         opacity: visible ? 1 : 0,
         transition: "opacity 0.3s ease, transform 0.4s cubic-bezier(0.34,1.56,0.64,1)",
         boxShadow: "0 8px 28px rgba(0,0,0,0.18)",
+        maxWidth: "calc(100vw - 32px)",
       }}
     >
       <span className="w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center text-stone-900 font-bold flex-shrink-0"
         style={{ fontSize: 10 }}>✓</span>
-      {message}
+      <span className="truncate">{message}</span>
     </div>
   );
 }
 
 /* ── ServiceCard ────────────────────────────────────────────────────────── */
-function ServiceCard({ center, onView, onBook, index }) {
+function ServiceCard({ center, onView, onBook, index, isMobile }) {
   const cardRef     = useRef(null);
   const stripRef    = useRef(null);
   const [loaded, setLoaded]   = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [stripVisible, setStripVisible] = useState(false);
 
-  /* Corner accent refs */
-  const tlRef = useRef(null); // top-left
-  const brRef = useRef(null); // bottom-right
-  const trRef = useRef(null); // top-right (inside image)
-  const blRef = useRef(null); // bottom-left (inside image)
+  const tlRef = useRef(null);
+  const brRef = useRef(null);
+  const trRef = useRef(null);
+  const blRef = useRef(null);
+
+  /* On mobile: tap toggles the action strip instead of hover */
+  const handleCardTap = () => {
+    if (!isMobile) return;
+    if (stripVisible) {
+      gsap.to(stripRef.current, { y: "100%", duration: 0.25, ease: "power2.in" });
+      setStripVisible(false);
+    } else {
+      gsap.to(stripRef.current, { y: 0, duration: 0.32, ease: "back.out(1.4)" });
+      setStripVisible(true);
+    }
+  };
 
   const onMouseEnter = () => {
+    if (isMobile) return;
     setHovered(true);
     gsap.to(cardRef.current, { y: -6, duration: 0.35, ease: "power2.out" });
     gsap.to(stripRef.current, { y: 0, duration: 0.38, ease: "back.out(1.4)" });
-    // outer corners
     gsap.to(tlRef.current, { opacity: 1, x: 0, y: 0, duration: 0.3, ease: "power2.out" });
     gsap.to(brRef.current, { opacity: 1, x: 0, y: 0, duration: 0.3, ease: "power2.out" });
-    // inner image corners
     gsap.to([trRef.current, blRef.current], { opacity: 1, duration: 0.25, delay: 0.06 });
   };
 
   const onMouseLeave = () => {
+    if (isMobile) return;
     setHovered(false);
     gsap.to(cardRef.current, { y: 0, duration: 0.4, ease: "power2.out" });
     gsap.to(stripRef.current, { y: "100%", duration: 0.3, ease: "power2.in" });
@@ -189,16 +222,15 @@ function ServiceCard({ center, onView, onBook, index }) {
       }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      onClick={handleCardTap}
     >
-      {/* ── Corner accents (outer card) ── */}
-      {/* top-left */}
+      {/* Corner accents */}
       <span ref={tlRef} className="absolute top-2.5 left-2.5 z-20 pointer-events-none"
         style={{ opacity: 0, transform: "translate(-5px,-5px)" }}>
         <svg width="16" height="16" fill="none">
           <path d="M0 14 L0 0 L14 0" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </span>
-      {/* bottom-right */}
       <span ref={brRef} className="absolute bottom-2.5 right-2.5 z-20 pointer-events-none"
         style={{ opacity: 0, transform: "translate(5px,5px)" }}>
         <svg width="16" height="16" fill="none">
@@ -206,9 +238,8 @@ function ServiceCard({ center, onView, onBook, index }) {
         </svg>
       </span>
 
-      {/* ── Image frame ── */}
-      <div className="relative h-48 overflow-hidden bg-stone-100">
-        {/* inner image corner accents */}
+      {/* Image frame */}
+      <div className="sb-card-img relative overflow-hidden bg-stone-100" style={{ height: "192px" }}>
         <span ref={trRef} className="absolute top-2.5 right-2.5 z-10 pointer-events-none" style={{ opacity: 0 }}>
           <svg width="16" height="16" fill="none">
             <path d="M2 0 L16 0 L16 14" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -220,7 +251,6 @@ function ServiceCard({ center, onView, onBook, index }) {
           </svg>
         </span>
 
-        {/* skeleton */}
         {!loaded && (
           <div className="absolute inset-0"
             style={{
@@ -230,7 +260,6 @@ function ServiceCard({ center, onView, onBook, index }) {
             }} />
         )}
 
-        {/* image */}
         <img
           src={center.image}
           alt={center.name}
@@ -245,7 +274,6 @@ function ServiceCard({ center, onView, onBook, index }) {
           }}
         />
 
-        {/* gradient */}
         <div className="absolute inset-0 pointer-events-none"
           style={{
             background: "linear-gradient(to top, rgba(28,25,23,0.6) 0%, transparent 52%)",
@@ -253,7 +281,6 @@ function ServiceCard({ center, onView, onBook, index }) {
             transition: "opacity 0.3s",
           }} />
 
-        {/* shimmer sweep */}
         {hovered && (
           <div className="absolute inset-0 pointer-events-none"
             style={{
@@ -263,7 +290,6 @@ function ServiceCard({ center, onView, onBook, index }) {
             }} />
         )}
 
-        {/* HOT badge */}
         {center.hot && (
           <div
             className="absolute top-2.5 left-3 z-10 bg-amber-400 text-stone-900 text-xs font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-full"
@@ -276,7 +302,6 @@ function ServiceCard({ center, onView, onBook, index }) {
           </div>
         )}
 
-        {/* Rating chip */}
         <div
           className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1 bg-white/90 backdrop-blur-sm text-amber-800 text-xs font-bold px-2.5 py-1 rounded-full"
           style={{
@@ -290,7 +315,6 @@ function ServiceCard({ center, onView, onBook, index }) {
           {center.rating}
         </div>
 
-        {/* Tag chip */}
         <div
           className="absolute bottom-2.5 left-2.5 z-10 text-white text-xs font-semibold px-2.5 py-1 rounded-full border backdrop-blur-sm tracking-wide"
           style={{
@@ -303,7 +327,7 @@ function ServiceCard({ center, onView, onBook, index }) {
           {center.tag}
         </div>
 
-        {/* Action strip — GSAP controlled */}
+        {/* Action strip — GSAP controlled; on mobile always rendered but starts hidden */}
         <div
           ref={stripRef}
           className="absolute bottom-0 left-0 right-0 flex gap-2 p-2.5 z-20"
@@ -329,7 +353,7 @@ function ServiceCard({ center, onView, onBook, index }) {
         </div>
       </div>
 
-      {/* ── Card body ── */}
+      {/* Card body */}
       <div className="px-4 py-3.5 border-t border-stone-100">
         <p className="text-sm font-bold tracking-tight mb-0.5 transition-colors duration-200"
           style={{ color: hovered ? "#B45309" : "#1C1917" }}>
@@ -346,8 +370,17 @@ export default function About() {
   const [active,   setActive]   = useState("Cleaning");
   const [rendered, setRendered] = useState(true);
   const [toast,    setToast]    = useState({ msg: "", show: false });
+  const [isMobile, setIsMobile] = useState(false);
   const gridRef  = useRef(null);
   const timerRef = useRef(null);
+
+  /* Detect mobile */
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   /* Tab switch — GSAP crossfade */
   const switchTab = useCallback((svc) => {
@@ -386,7 +419,6 @@ export default function About() {
     );
   }, []);
 
- 
   return (
     <div className="min-h-screen bg-white">
 
@@ -394,31 +426,31 @@ export default function About() {
       <Ticker />
 
       {/* ── Hero ── */}
-      <div className="text-center px-5 pt-14 pb-9 max-w-2xl mx-auto">
+      <div className="text-center px-4 sm:px-5 pt-10 sm:pt-14 pb-7 sm:pb-9 max-w-2xl mx-auto">
         {/* Live badge */}
-        <div className="sb-hero-anim inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-4 py-1.5 mb-5">
+        <div className="sb-hero-anim inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-3.5 sm:px-4 py-1.5 mb-4 sm:mb-5">
           <span
             className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"
             style={{ animation: "sb-pulsedot 2s ease-in-out infinite" }}
           />
-          <span className="text-xs font-semibold text-amber-700 tracking-wide">247 providers online right now</span>
+          <span className="text-[11px] sm:text-xs font-semibold text-amber-700 tracking-wide">
+            247 providers online right now
+          </span>
         </div>
 
-        <h1 className="sb-hero-anim text-4xl sm:text-5xl font-extrabold text-stone-900 tracking-tight leading-tight">
+        <h1 className="sb-hero-anim text-[28px] sm:text-4xl sm:text-5xl font-extrabold text-stone-900 tracking-tight leading-tight">
           Find &amp; Book{" "}
           <span className="text-amber-400 underline decoration-amber-200 underline-offset-4 decoration-4">
             Trusted Services
           </span>
         </h1>
-
-        
       </div>
 
       {/* Divider */}
       <div className="h-px bg-stone-100 max-w-screen-xl mx-auto" />
 
-      {/* ── Category chips ── */}
-      <div className="flex flex-wrap justify-center gap-2 px-5 pt-7 pb-7 max-w-3xl mx-auto">
+      {/* ── Category chips — horizontal scroll on mobile ── */}
+      <div className="sb-chip-scroll flex flex-wrap justify-center gap-2 px-5 pt-5 sm:pt-7 pb-5 sm:pb-7 sm:max-w-3xl sm:mx-auto">
         {SERVICES.map(svc => {
           const isActive = active === svc;
           return (
@@ -426,7 +458,7 @@ export default function About() {
               key={svc}
               onClick={() => switchTab(svc)}
               className={[
-                "px-5 py-2 rounded-full text-sm font-semibold border-[1.5px] whitespace-nowrap outline-none transition-all duration-300",
+                "px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-[13px] sm:text-sm font-semibold border-[1.5px] whitespace-nowrap outline-none transition-all duration-300",
                 isActive
                   ? "bg-amber-400 border-amber-400 text-stone-900 shadow-lg"
                   : "bg-white border-stone-200 text-stone-400 hover:border-amber-400 hover:text-amber-700",
@@ -443,17 +475,23 @@ export default function About() {
       </div>
 
       {/* ── Section label ── */}
-      <div className="px-5 pb-3 max-w-screen-xl mx-auto">
-        <p className="text-xs font-bold tracking-[0.12em] uppercase text-stone-300">
+      <div className="sb-section-label px-4 sm:px-5 pb-2.5 sm:pb-3 max-w-screen-xl mx-auto">
+        <p className="text-[10px] sm:text-xs font-bold tracking-[0.12em] uppercase text-stone-300">
           {active} · {DATA[active].length} providers
         </p>
+        {/* Mobile tap hint */}
+        {isMobile && (
+          <p className="text-[10px] text-stone-300 mt-0.5 font-normal">
+            Tap a card to see actions
+          </p>
+        )}
       </div>
 
       {/* ── Grid ── */}
       <div
         ref={gridRef}
-        className="grid gap-5 px-5 pb-24 max-w-screen-xl mx-auto
-          grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+        className="sb-grid grid gap-4 sm:gap-5 px-4 sm:px-5 pb-20 sm:pb-24 max-w-screen-xl mx-auto
+          grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
       >
         {rendered && DATA[active].map((c, i) => (
           <ServiceCard
@@ -462,6 +500,7 @@ export default function About() {
             index={i}
             onView={handleView}
             onBook={handleBook}
+            isMobile={isMobile}
           />
         ))}
       </div>

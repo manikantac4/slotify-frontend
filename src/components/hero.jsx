@@ -245,10 +245,19 @@ export default function App() {
                   ))}
                 </div>
 
-                <button className="text-left px-3 py-3.5 rounded-lg border-0 bg-transparent text-white text-[15px] font-medium cursor-pointer">
+                {/* Mobile Log In — fixed: added onClick */}
+                <button
+                  onClick={() => { setMenuOpen(false); navigate("/login"); }}
+                  className="text-left px-3 py-3.5 rounded-lg border-0 bg-transparent text-white text-[15px] font-medium cursor-pointer"
+                >
                   Log In
                 </button>
-                <button className="px-3 py-3.5 rounded-full border-0 bg-white text-black text-[15px] font-semibold cursor-pointer mt-1">
+
+                {/* Mobile Get Started — fixed: added onClick */}
+                <button
+                  onClick={() => { setMenuOpen(false); navigate("/login"); }}
+                  className="px-3 py-3.5 rounded-full border-0 bg-white text-black text-[15px] font-semibold cursor-pointer mt-1"
+                >
                   Get Started
                 </button>
               </div>
