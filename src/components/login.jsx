@@ -12,6 +12,8 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Briefcase, ArrowLeft, CheckCircle, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+
 
 export default function App() {
   const [email, setEmail] = useState("");
@@ -23,7 +25,34 @@ export default function App() {
   const [authMode, setAuthMode] = useState("login");
   const [toast, setToast] = useState(null); // { type: "success" | "error", message: string }
   const [loading, setLoading] = useState(false);
+  useEffect(() => {
+  const uid = localStorage.getItem("userId");
 
+  if (uid) {
+    API.get(`/user/${uid}`)
+      .then(async (res) => {
+        const user = res.data;
+
+        if (user.role === "provider") {
+          const shopRes = await API.get(`/shop/my-shop/${uid}`);
+          const shop = shopRes.data;
+
+          if (shop) {
+            localStorage.setItem("shopId", shop._id);
+            navigate("/providerdashboard");
+          } else {
+            navigate("/details");
+          }
+
+        } else {
+          navigate("/customer-dashboard");
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem("userId");
+      });
+  }
+}, []);
   const showToast = (type, message) => {
     setToast({ type, message });
     if (type === "error") {
@@ -66,10 +95,10 @@ export default function App() {
           if (user.role === "provider") {
             const shopRes = await API.get(`/shop/my-shop/${uid}`);
             const shop = shopRes.data;
-            if (shop) {
-              localStorage.setItem("shopId", uid);
-              navigate("/providerdashboard");
-            } else {
+           if (shop) {
+  localStorage.setItem("shopId", shop._id); // ✅ correct
+  navigate("/providerdashboard");
+}else {
               navigate("/details");
             }
           } else {

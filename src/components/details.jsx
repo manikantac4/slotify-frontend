@@ -247,6 +247,36 @@ body,html{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#fff;}
   .body,.hdr,.steps{padding-left:20px;padding-right:20px;}
   .step-label{display:none;}
 }
+  .img-upload-box {
+  width: 100%;
+  height: 140px;
+  border: 2px dashed #E5E7EB;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: #FAFAFA;
+  transition: all 0.2s;
+  overflow: hidden;
+}
+
+.img-upload-box:hover {
+  border-color: #9CA3AF;
+  background: #F9FAFB;
+}
+
+.img-placeholder {
+  font-size: 13px;
+  color: #9CA3AF;
+  font-weight: 600;
+}
+
+.img-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 `;
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
@@ -276,6 +306,7 @@ export default function ShopDetails() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState({});
     const navigate = useNavigate();
+    const [file, setFile] = useState(null);
   // Step 1
   const [cat, setCat]         = useState("");
   const [name, setName]       = useState("");
@@ -319,7 +350,13 @@ export default function ShopDetails() {
     if (!sName.trim()) { setSErr("Enter name"); return; }
     if (!sPrice)       { setSErr("Enter price"); return; }
     setSErr("");
-    setSvcs(p => [...p, { id: Date.now(), name: sName.trim(), price: +sPrice, dur: sDur ? +sDur : null }]);
+    setSvcs(p => [...p, { 
+  id: Date.now().toString(), // 🔥 STRING
+  name: sName.trim(), 
+  price: +sPrice, 
+  dur: sDur ? +sDur : null,
+  isActive: true // 🔥 ADD THIS
+}]);
     setSName(""); setSPrice(""); setSDur("");
   };
 
@@ -351,22 +388,31 @@ export default function ShopDetails() {
 
   const uid = auth.currentUser.uid;
 
-  const body = {
-    ownerId: uid,
-    shopName: name.trim(),
-    ownerName: owner.trim(),
-    category: cat,
-    location: loc.trim(),
-    phone: phone.trim(),
-    email: email.trim(),
-    services: svcs.map(({ id, ...r }) => r),
-    weeklySchedule: weekly,
-  };
+  const formData = new FormData();
+
+if (file) {
+  formData.append("shopImage", file);
+}
+formData.append("ownerId", uid);
+formData.append("shopName", name.trim());
+formData.append("ownerName", owner.trim());
+formData.append("category", cat);
+formData.append("location", loc.trim());
+formData.append("phone", phone.trim());
+formData.append("email", email.trim());
+
+// IMPORTANT (arrays)
+formData.append("services", JSON.stringify(svcs.map(({ id, ...r }) => r)));
+formData.append("weeklySchedule", JSON.stringify(weekly));
 
   setLoading(true);
 
   try {
-    await API.post("/shop/create", body);
+    await API.post("/shop/create", formData, {
+  headers: {
+    "Content-Type": "multipart/form-data",
+  },
+});
 
     setDone(true);
 
@@ -490,6 +536,31 @@ useEffect(() => {
                       <Field label="Email" icon={I.Mail} hint="Optional">
                         <input className="inp" placeholder="shop@email.com" type="email" value={email} onChange={e => setEmail(e.target.value)} />
                       </Field>
+                      <Field label="Shop Image">
+  <div
+    className="img-upload-box"
+    onClick={() => document.getElementById("fileInput").click()}
+  >
+    {file ? (
+      <img
+        src={URL.createObjectURL(file)}
+        alt="preview"
+        className="img-preview"
+      />
+    ) : (
+      <div className="img-placeholder">
+        <span>📷 Upload Shop Image</span>
+      </div>
+    )}
+  </div>
+
+  <input
+    id="fileInput"
+    type="file"
+    style={{ display: "none" }}
+    onChange={(e) => setFile(e.target.files[0])}
+  />
+</Field>
                     </div>
                   </div>
                 )}
@@ -497,7 +568,6 @@ useEffect(() => {
                 {/* ─── STEP 2 ───────────────────────────────────────────── */}
                 {step === 2 && (
                   <div style={{ animation: "up .28s cubic-bezier(.22,1,.36,1) both" }}>
-
                     <div className="add-box">
                       <div className="row3">
                         <Field label="Service Name" icon={I.Tag} required>

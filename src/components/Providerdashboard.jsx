@@ -380,8 +380,7 @@ export default function ProviderDashboard() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   // Get auth data from localStorage
-  const userId = localStorage.getItem('userId');
-  const shopId = localStorage.getItem('shopId');
+ const uid = localStorage.getItem('userId');
 
   // Fetch all data
   const fetchData = async () => {
@@ -389,7 +388,7 @@ export default function ProviderDashboard() {
       setLoading(true);
       setError(null);
 
-      if (!userId || !shopId) {
+      if (!uid) {
         window.location.href = '/login';
         return;
       }
@@ -398,11 +397,13 @@ export default function ProviderDashboard() {
 
       // Fetch user, slots, and bookings in parallel
       // Note: Services come from slots API, no separate API call needed
-      const [userRes, slotsRes, bookingsRes] = await Promise.all([
-        API.get(`/user/${userId}`),
-        API.get(`/shop/slots/${shopId}`, { params: { dayIndex: selectedDay } }),
-        API.get(`/bookings/${shopId}`, { params: { date } }),
-      ]);
+      
+
+const [userRes, slotsRes, bookingsRes] = await Promise.all([
+  API.get(`/user/${uid}`),
+  API.get(`/shop/slots/${uid}`, { params: { dayIndex: selectedDay } }), // ✅ FIXED
+  API.get(`/bookings/${uid}`, { params: { date } }), // ✅ FIXED
+]);
 
       // Set user
       setUser(userRes.data);
@@ -434,8 +435,8 @@ export default function ProviderDashboard() {
 
   // Fetch data on mount and when selectedDay changes
   useEffect(() => {
-    fetchData();
-  }, [selectedDay, userId, shopId]);
+  fetchData();
+}, [selectedDay, uid]);
 
   // Handle logout
   const handleLogout = () => {
